@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi Konsep Mol</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Outfit', sans-serif; }
+    .tab-active { background: #1e3a5f; color: #fff; }
+    .tab-inactive { background: #e2e8f0; color: #334155; }
+    .result-card { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #0284c7; }
+    .phase-solid { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .phase-liquid { background: linear-gradient(135deg, #dbeafe, #93c5fd); }
+    .phase-gas { background: linear-gradient(135deg, #d1fae5, #6ee7b7); }
+    .hero-bg { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0c4a6e 100%); }
+    input[type="number"] { -moz-appearance: textfield; }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  </style>
+  <script>
+    const defaultConfig = {
+      main_title: "Simulasi Konsep Mol & Pereaksi Pembatas",
+      background_color: "#0f172a",
+      surface_color: "#ffffff",
+      text_color: "#1e293b",
+      primary_action: "#0284c7",
+      secondary_action: "#64748b"
+    };
+
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => {
+        const title = document.getElementById('main-title');
+        if (title) title.textContent = config.main_title || defaultConfig.main_title;
+        document.querySelectorAll('.hero-bg').forEach(el => el.style.background = `linear-gradient(135deg, ${config.background_color || defaultConfig.background_color}, #1e3a5f, #0c4a6e)`);
+        document.querySelectorAll('.btn-primary').forEach(el => {
+          el.style.backgroundColor = config.primary_action || defaultConfig.primary_action;
+        });
+      },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_action || defaultConfig.primary_action, set: (v) => { config.primary_action = v; window.elementSdk.setConfig({ primary_action: v }); } },
+          { get: () => config.secondary_action || defaultConfig.secondary_action, set: (v) => { config.secondary_action = v; window.elementSdk.setConfig({ secondary_action: v }); } }
+        ],
+        borderables: [],
+        fontEditable: { get: () => config.font_family || 'Outfit', set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+        fontSizeable: undefined
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ["main_title", config.main_title || defaultConfig.main_title]
+      ])
+    });
+  </script>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div class="w-full h-full overflow-auto">
+   <!-- Hero -->
+   <header class="hero-bg text-white py-10 px-6 text-center">
+    <h1 id="main-title" class="text-3xl md:text-4xl font-bold mb-2">Simulasi Konsep Mol &amp; Reaksi Pembatas</h1>
+    <p class="text-blue-200 text-lg">Menghitung Mr, M, Mol, dan Pereaksi Pembatas</p>
+   </header><!-- Tabs -->
+   <nav class="flex justify-center gap-2 py-4 px-4 flex-wrap">
+    <button onclick="switchTab('mr')" id="tab-mr" class="tab-inactive px-5 py-2 rounded-full font-medium transition-all">📋 Massa Relatif (Mr)</button> <button onclick="switchTab('molarity')" id="tab-molarity" class="tab-inactive px-5 py-2 rounded-full font-medium transition-all">⚗️ Molaritas (M)</button> <button onclick="switchTab('mol')" id="tab-mol" class="tab-active px-5 py-2 rounded-full font-medium transition-all">🧪 Perhitungan Mol</button> <button onclick="switchTab('limiting')" id="tab-limiting" class="tab-inactive px-5 py-2 rounded-full font-medium transition-all">⚖️ Pereaksi Pembatas</button>
+   </nav><!-- Tab: Kalkulator Mr -->
+   <section id="section-mr" class="max-w-4xl mx-auto px-4 pb-10 hidden">
+    <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200 mb-6">
+     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5"></i> Massa Relatif (Mr)</h2>
+     <p class="text-slate-600 mb-3">Mr adalah jumlah total dari massa atom relatif semua atom penyusun molekul.</p>
+     <div class="bg-slate-50 rounded-lg p-4 mb-3">
+      <p class="font-semibold text-slate-700 mb-2">📌 Data Massa Atom Relatif (Ar):</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+       <div>
+        H = 1
+       </div>
+       <div>
+        C = 12
+       </div>
+       <div>
+        N = 14
+       </div>
+       <div>
+        O = 16
+       </div>
+       <div>
+        Na = 23
+       </div>
+       <div>
+        S = 32
+       </div>
+       <div>
+        Cl = 35,5
+       </div>
+       <div>
+        Ca = 40
+       </div>
+      </div>
+     </div>
+     <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 font-mono text-sm text-blue-900"><strong>Rumus:</strong> Mr = (jumlah atom A × Ar A) + (jumlah atom B × Ar B) + ...
+     </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200">
+     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="calculator" class="w-5 h-5"></i> Hitung Mr Molekul/Senyawa</h2>
+     <div class="mb-4"><label class="block text-sm font-medium text-slate-600 mb-2">Rumus Kimia Molekul/Senyawa :</label> <input type="text" id="mr-name" value="H₂O" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none" placeholder="contoh: H₂O, NaCl, H₂SO₄">
+     </div>
+     <div class="space-y-2 mb-4" id="mr-elements">
+      <div class="flex gap-2"><input type="text" placeholder="Elemen (H, C, O, dll)" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-name"> <input type="number" placeholder="Jumlah atom" value="2" class="w-20 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-count"> <input type="number" placeholder="Ar" value="1" step="0.1" class="w-20 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-ar"> <button onclick="removeElement(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 rounded-lg transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="flex gap-2"><input type="text" placeholder="Elemen (H, C, O, dll)" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-name" value="O"> <input type="number" placeholder="Jumlah atom" value="1" class="w-20 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-count"> <input type="number" placeholder="Ar" value="16" step="0.1" class="w-20 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-ar"> <button onclick="removeElement(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 rounded-lg transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+     </div><button onclick="addElement()" class="w-full mb-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2 rounded-lg transition flex items-center justify-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Tambah Elemen</button> <button onclick="calculateMr()" class="btn-primary w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"><i data-lucide="zap" class="w-5 h-5"></i> Hitung Mr</button>
+     <div id="mr-result" class="hidden mt-5 result-card rounded-xl p-5 space-y-2"></div>
+    </div>
+   </section><!-- Tab: Kalkulator Molaritas -->
+   <section id="section-molarity" class="max-w-4xl mx-auto px-4 pb-10 hidden">
+    <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200 mb-6">
+     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5"></i> Molaritas (Molarity)</h2>
+     <p class="text-slate-600 mb-3">Molaritas adalah konsentrasi larutan yang menyatakan jumlah mol zat terlarut dalam 1 liter larutan.</p>
+     <div class="grid md:grid-cols-2 gap-3">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+       <p class="font-semibold text-blue-800 mb-1">📌 Rumus Umum</p>
+       <p class="text-lg font-mono bg-white/60 rounded p-2">M = n / V</p>
+       <p class="text-sm text-blue-700">M = molaritas (mol/L), n = mol, V = volume (L)</p>
+      </div>
+      <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
+       <p class="font-semibold text-emerald-800 mb-1">🧮 Rumus Alternatif</p>
+       <p class="text-lg font-mono bg-white/60 rounded p-2">M = (m × 1000) / (Mr × V)</p>
+       <p class="text-sm text-emerald-700">m = massa (g), V = volume (mL)</p>
+      </div>
+     </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200">
+     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="flask-conical" class="w-5 h-5"></i> Kalkulator Molaritas</h2>
+     <div class="mb-4"><label class="block font-medium text-slate-700 mb-2">Pilih Mode Perhitungan:</label>
+      <div class="flex gap-2"><button onclick="setMolarityMode('dari-mol')" id="molarity-mode-mol" class="px-4 py-2 rounded-lg border-2 border-sky-400 bg-sky-50 font-medium text-sky-800">Dari Mol &amp; Volume</button> <button onclick="setMolarityMode('dari-massa')" id="molarity-mode-massa" class="px-4 py-2 rounded-lg border-2 border-slate-200 font-medium text-slate-600">Dari Massa &amp; Volume</button>
+      </div>
+     </div><!-- Mode: Dari Mol -->
+     <div id="molarity-dari-mol" class="space-y-3">
+      <div class="grid md:grid-cols-2 gap-3">
+       <div><label class="block text-sm font-medium text-slate-600 mb-1">Jumlah Mol (n)</label> <input type="number" id="molarity-n" value="0.5" step="0.01" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-1">Volume Larutan (mL)</label> <input type="number" id="molarity-v" value="500" step="1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+      </div>
+     </div><!-- Mode: Dari Massa -->
+     <div id="molarity-dari-massa" class="space-y-3 hidden">
+      <div class="grid md:grid-cols-3 gap-3">
+       <div><label class="block text-sm font-medium text-slate-600 mb-1">Massa Zat (g)</label> <input type="number" id="molarity-massa" value="5.85" step="0.01" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-1">Mr Zat (g/mol)</label> <input type="number" id="molarity-mr" value="58.5" step="0.1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-1">Volume Larutan (mL)</label> <input type="number" id="molarity-v-massa" value="500" step="1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+      </div>
+     </div><button onclick="calculateMolarity()" class="btn-primary mt-4 w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"><i data-lucide="zap" class="w-5 h-5"></i> Hitung Molaritas</button>
+     <div id="molarity-result" class="hidden mt-5 result-card rounded-xl p-5 space-y-2"></div>
+    </div>
+   </section><!-- Tab: Perhitungan Mol -->
+   <section id="section-mol" class="max-w-4xl mx-auto px-4 pb-10">
+    <!-- Rumus Reference -->
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-6 border border-slate-200">
+     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5"></i> Rumus Konsep Mol</h2>
+     <div class="grid md:grid-cols-3 gap-4">
+      <div class="phase-solid rounded-xl p-4 text-center">
+       <p class="font-bold text-amber-800 mb-1">Zat Padat</p>
+       <p class="text-lg font-mono bg-white/60 rounded p-2">n = massa / Mr</p>
+       <p class="text-sm text-amber-700 mt-1">N = n × 6,022×10²³</p>
+      </div>
+      <div class="phase-liquid rounded-xl p-4 text-center">
+       <p class="font-bold text-blue-800 mb-1">💧 Larutan</p>
+       <p class="text-lg font-mono bg-white/60 rounded p-2">n = M × V</p>
+       <p class="text-sm text-blue-700 mt-1">M = molaritas, V = volume (L)</p>
+      </div>
+      <div class="phase-gas rounded-xl p-4 text-center">
+       <p class="font-bold text-emerald-800 mb-1">💨 Gas (STP)</p>
+       <p class="text-lg font-mono bg-white/60 rounded p-2">n = V / 22,4</p>
+       <p class="text-sm text-emerald-700 mt-1">V dalam liter, STP</p>
+      </div>
+     </div>
+    </div><!-- Calculator -->
+    <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200">
+     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="calculator" class="w-5 h-5"></i> Kalkulator Mol</h2>
+     <div class="mb-4">
+      <label class="block font-medium text-slate-700 mb-2">Pilih Wujud Zat:</label>
+      <div class="flex gap-2 flex-wrap">
+       <button onclick="setPhase('solid')" id="phase-solid" class="px-4 py-2 rounded-lg border-2 border-amber-400 bg-amber-50 font-medium text-amber-800">Padat</button> <button onclick="setPhase('liquid')" id="phase-liquid" class="px-4 py-2 rounded-lg border-2 border-slate-200 font-medium text-slate-600">💧 Cair/Larutan</button> <button onclick="setPhase('gas')" id="phase-gas" class="px-4 py-2 rounded-lg border-2 border-slate-200 font-medium text-slate-600">💨 Gas</button>
+      </div>
+     </div><!-- Solid/Liquid inputs -->
+     <div id="input-solid" class="space-y-3">
+      <div class="grid md:grid-cols-2 gap-3">
+       <div>
+        <label class="block text-sm font-medium text-slate-600 mb-1">Nama Zat</label> <input type="text" id="mol-name" value="NaCl" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-600 mb-1">Mr (g/mol)</label> <input type="number" id="mol-mr" value="58.5" step="0.1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+      </div>
+      <div>
+       <label class="block text-sm font-medium text-slate-600 mb-1">Massa (gram)</label> <input type="number" id="mol-mass" value="117" step="0.1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+      </div>
+     </div><!-- Liquid/Solution inputs -->
+     <div id="input-liquid" class="space-y-3 hidden">
+      <div class="grid md:grid-cols-2 gap-3">
+       <div>
+        <label class="block text-sm font-medium text-slate-600 mb-1">Molaritas (M)</label> <input type="number" id="mol-molarity" value="0.5" step="0.01" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-600 mb-1">Volume (mL)</label> <input type="number" id="mol-vol-liquid" value="500" step="1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+       </div>
+      </div>
+     </div><!-- Gas inputs -->
+     <div id="input-gas" class="space-y-3 hidden">
+      <div>
+       <label class="block text-sm font-medium text-slate-600 mb-1">Volume Gas pada STP (Liter)</label> <input type="number" id="mol-vol-gas" value="44.8" step="0.1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none">
+      </div>
+     </div><button onclick="calculateMol()" class="btn-primary mt-4 w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"> <i data-lucide="zap" class="w-5 h-5"></i> Hitung </button> <!-- Result -->
+     <div id="mol-result" class="hidden mt-5 result-card rounded-xl p-5 space-y-2">
+     </div>
+    </div>
+   </section><!-- Tab: Pereaksi Pembatas -->
+   <section id="section-limiting" class="max-w-4xl mx-auto px-4 pb-10 hidden">
+    <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200 mb-6">
+     <h2 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5"></i> Konsep Pereaksi Pembatas</h2>
+     <p class="text-slate-600">Pereaksi pembatas adalah pereaksi yang habis lebih dulu dalam reaksi kimia dan menentukan jumlah produk yang terbentuk.</p>
+     <div class="mt-3 bg-slate-50 rounded-lg p-3 font-mono text-sm">
+      Bandingkan: mol masing-masing / koefisien → yang paling kecil = pereaksi pembatas
+     </div>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md p-6 border border-slate-200">
+     <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="flask-conical" class="w-5 h-5"></i> Simulasi Pereaksi Pembatas</h2>
+     <div class="mb-4">
+      <label class="block font-medium text-slate-700 mb-2">Pilih Reaksi:</label> <select id="reaction-select" onchange="loadReaction()" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none"> <option value="0">2H₂ + O₂ → 2H₂O</option> <option value="1">N₂ + 3H₂ → 2NH₃</option> <option value="2">CH₄ + 2O₂ → CO₂ + 2H₂O</option> <option value="3">2Al + 3Cl₂ → 2AlCl₃</option> </select>
+     </div>
+     <div id="reaction-display" class="bg-slate-800 text-green-300 font-mono text-center text-lg rounded-xl p-4 mb-4">
+      2H₂ + O₂ → 2H₂O
+     </div>
+     <div class="grid md:grid-cols-2 gap-4 mb-4">
+      <div class="bg-rose-50 border border-rose-200 rounded-xl p-4">
+       <label id="reactant-a-label" class="block font-semibold text-rose-800 mb-1">Pereaksi A: H₂</label> <label class="block text-sm text-rose-600 mb-1">Mol yang tersedia:</label> <input type="number" id="mol-a" value="3" step="0.1" class="w-full border border-rose-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-400 outline-none">
+      </div>
+      <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+       <label id="reactant-b-label" class="block font-semibold text-indigo-800 mb-1">Pereaksi B: O₂</label> <label class="block text-sm text-indigo-600 mb-1">Mol yang tersedia:</label> <input type="number" id="mol-b" value="2" step="0.1" class="w-full border border-indigo-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none">
+      </div>
+     </div><button onclick="calculateLimiting()" class="btn-primary w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"> <i data-lucide="scale" class="w-5 h-5"></i> Tentukan Pereaksi Pembatas </button>
+     <div id="limiting-result" class="hidden mt-5 space-y-4"></div>
+    </div>
+   </section>
+  </div>
+  <script>
+  const AVOGADRO = 6.022e23;
+  let currentPhase = 'solid';
+  let currentMolarityMode = 'dari-mol';
+
+  const atomicMasses = {
+    H: 1, C: 12, N: 14, O: 16, Na: 23, S: 32, Cl: 35.5, Ca: 40,
+    P: 31, K: 39, Fe: 56, Cu: 64, Zn: 65, Br: 80, I: 127
+  };
+
+  const reactions = [
+    { eq: "2H₂ + O₂ → 2H₂O", a: "H₂", b: "O₂", coefA: 2, coefB: 1, products: [{name:"H₂O", coef:2}] },
+    { eq: "N₂ + 3H₂ → 2NH₃", a: "N₂", b: "H₂", coefA: 1, coefB: 3, products: [{name:"NH₃", coef:2}] },
+    { eq: "CH₄ + 2O₂ → CO₂ + 2H₂O", a: "CH₄", b: "O₂", coefA: 1, coefB: 2, products: [{name:"CO₂", coef:1},{name:"H₂O", coef:2}] },
+    { eq: "2Al + 3Cl₂ → 2AlCl₃", a: "Al", b: "Cl₂", coefA: 2, coefB: 3, products: [{name:"AlCl₃", coef:2}] }
+  ];
+
+  function switchTab(tab) {
+    document.getElementById('section-mr').classList.toggle('hidden', tab !== 'mr');
+    document.getElementById('section-molarity').classList.toggle('hidden', tab !== 'molarity');
+    document.getElementById('section-mol').classList.toggle('hidden', tab !== 'mol');
+    document.getElementById('section-limiting').classList.toggle('hidden', tab !== 'limiting');
+    
+    const tabs = ['mr', 'molarity', 'mol', 'limiting'];
+    tabs.forEach(t => {
+      const btn = document.getElementById(`tab-${t}`);
+      btn.className = t === tab ? 'tab-active px-5 py-2 rounded-full font-medium transition-all' : 'tab-inactive px-5 py-2 rounded-full font-medium transition-all';
+    });
+  }
+
+  // ===== KALKULATOR MR =====
+  function addElement() {
+    const container = document.getElementById('mr-elements');
+    const row = document.createElement('div');
+    row.className = 'flex gap-2';
+    row.innerHTML = `
+      <input type="text" placeholder="Elemen (H, C, O, dll)" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-name">
+      <input type="number" placeholder="Jumlah atom" value="1" class="w-20 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-count">
+      <input type="number" placeholder="Ar" value="1" step="0.1" class="w-20 border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 outline-none element-ar">
+      <button onclick="removeElement(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 rounded-lg transition"><i data-lucide="x" class="w-4 h-4"></i></button>
+    `;
+    container.appendChild(row);
+    lucide.createIcons();
+  }
+
+  function removeElement(btn) {
+    btn.parentElement.remove();
+  }
+
+  function calculateMr() {
+    const name = document.getElementById('mr-name').value || 'Senyawa';
+    const rows = document.getElementById('mr-elements').querySelectorAll('div');
+    let totalMr = 0;
+    let detail = '<table class="w-full text-sm"><tr class="border-b"><th class="text-left">Elemen</th><th>Jumlah</th><th>Ar</th><th>Subtotal</th></tr>';
+    
+    rows.forEach(row => {
+      const name = row.querySelector('.element-name').value || '?';
+      const count = parseInt(row.querySelector('.element-count').value) || 0;
+      const ar = parseFloat(row.querySelector('.element-ar').value) || 0;
+      const subtotal = count * ar;
+      totalMr += subtotal;
+      detail += `<tr class="border-b"><td>${name}</td><td class="text-center">${count}</td><td class="text-center">${ar}</td><td class="text-right font-semibold">${subtotal}</td></tr>`;
+    });
+    
+    detail += `<tr class="font-bold text-sky-700"><td colspan="3">Total Mr:</td><td class="text-right">${totalMr.toFixed(2)}</td></tr></table>`;
+    
+    const result = document.getElementById('mr-result');
+    result.innerHTML = `
+      <h3 class="font-bold text-sky-800 text-lg mb-2">📊 Hasil Perhitungan Mr</h3>
+      <p class="mb-2"><strong>Rumus Kimia Molekul/Senyawa :</strong> ${name}</p>
+      <div class="bg-white rounded-lg overflow-hidden mb-2">${detail}</div>
+      <p class="text-2xl font-bold text-sky-900">Mr ${name} = ${totalMr.toFixed(2)} g/mol</p>
+    `;
+    result.classList.remove('hidden');
+  }
+
+  // ===== KALKULATOR MOLARITAS =====
+  function setMolarityMode(mode) {
+    currentMolarityMode = mode;
+    document.getElementById('molarity-dari-mol').classList.toggle('hidden', mode !== 'dari-mol');
+    document.getElementById('molarity-dari-massa').classList.toggle('hidden', mode !== 'dari-massa');
+    
+    const btn1 = document.getElementById('molarity-mode-mol');
+    const btn2 = document.getElementById('molarity-mode-massa');
+    
+    if (mode === 'dari-mol') {
+      btn1.className = 'px-4 py-2 rounded-lg border-2 border-sky-400 bg-sky-50 font-medium text-sky-800';
+      btn2.className = 'px-4 py-2 rounded-lg border-2 border-slate-200 font-medium text-slate-600';
+    } else {
+      btn1.className = 'px-4 py-2 rounded-lg border-2 border-slate-200 font-medium text-slate-600';
+      btn2.className = 'px-4 py-2 rounded-lg border-2 border-sky-400 bg-sky-50 font-medium text-sky-800';
+    }
+    document.getElementById('molarity-result').classList.add('hidden');
+  }
+
+  function calculateMolarity() {
+    let M, n, V, detail;
+    
+    if (currentMolarityMode === 'dari-mol') {
+      n = parseFloat(document.getElementById('molarity-n').value);
+      V = parseFloat(document.getElementById('molarity-v').value);
+      if (!n || !V) return;
+      
+      V = V / 1000; // Convert mL to L
+      M = n / V;
+      detail = `
+        <p><strong>Jumlah Mol (n):</strong> ${n} mol</p>
+        <p><strong>Volume Larutan:</strong> ${document.getElementById('molarity-v').value} mL = ${V} L</p>
+        <p><strong>Rumus:</strong> M = n / V = ${n} / ${V}</p>
+      `;
+    } else {
+      const massa = parseFloat(document.getElementById('molarity-massa').value);
+      const mr = parseFloat(document.getElementById('molarity-mr').value);
+      V = parseFloat(document.getElementById('molarity-v-massa').value);
+      if (!massa || !mr || !V) return;
+      
+      n = massa / mr;
+      V = V / 1000; // Convert mL to L
+      M = n / V;
+      detail = `
+        <p><strong>Massa Zat:</strong> ${massa} g</p>
+        <p><strong>Mr Zat:</strong> ${mr} g/mol</p>
+        <p><strong>Volume Larutan:</strong> ${document.getElementById('molarity-v-massa').value} mL = ${V} L</p>
+        <p><strong>Langkah 1:</strong> n = massa / Mr = ${massa} / ${mr} = ${n.toFixed(4)} mol</p>
+        <p><strong>Langkah 2:</strong> M = n / V = ${n.toFixed(4)} / ${V} = ${M.toFixed(4)} mol/L</p>
+      `;
+    }
+    
+    const result = document.getElementById('molarity-result');
+    result.innerHTML = `
+      <h3 class="font-bold text-sky-800 text-lg mb-2">📊 Hasil Perhitungan Molaritas</h3>
+      ${detail}
+      <hr class="border-sky-200 my-2">
+      <p class="text-2xl font-bold text-sky-900">Molaritas = ${M.toFixed(4)} mol/L (M)</p>
+      <p class="text-sm text-slate-500 mt-1">*1 M = 1 mol/L</p>
+    `;
+    result.classList.remove('hidden');
+  }
+
+  // ===== KALKULATOR MOL (EXISTING) =====
+  function setPhase(phase) {
+    currentPhase = phase;
+    document.getElementById('input-solid').classList.toggle('hidden', phase !== 'solid');
+    document.getElementById('input-liquid').classList.toggle('hidden', phase !== 'liquid');
+    document.getElementById('input-gas').classList.toggle('hidden', phase !== 'gas');
+    const styles = { solid: ['border-amber-400 bg-amber-50 text-amber-800','border-slate-200 text-slate-600','border-slate-200 text-slate-600'], liquid: ['border-slate-200 text-slate-600','border-blue-400 bg-blue-50 text-blue-800','border-slate-200 text-slate-600'], gas: ['border-slate-200 text-slate-600','border-slate-200 text-slate-600','border-emerald-400 bg-emerald-50 text-emerald-800'] };
+    ['solid','liquid','gas'].forEach((p,i) => {
+      document.getElementById('phase-'+p).className = `px-4 py-2 rounded-lg border-2 font-medium ${styles[phase][i]}`;
+    });
+    document.getElementById('mol-result').classList.add('hidden');
+  }
+
+  function formatSci(num) {
+    if (num === 0) return '0';
+    const exp = Math.floor(Math.log10(Math.abs(num)));
+    const mantissa = num / Math.pow(10, exp);
+    return `${mantissa.toFixed(3)} × 10<sup>${exp}</sup>`;
+  }
+
+  function calculateMol() {
+    let n, detail;
+    if (currentPhase === 'solid') {
+      const mass = parseFloat(document.getElementById('mol-mass').value);
+      const mr = parseFloat(document.getElementById('mol-mr').value);
+      const name = document.getElementById('mol-name').value || 'Zat';
+      if (!mass || !mr) return;
+      n = mass / mr;
+      detail = `<p><strong>Zat:</strong> ${name} (Mr = ${mr} g/mol)</p><p><strong>Massa:</strong> ${mass} gram</p><p><strong>Rumus:</strong> n = massa / Mr = ${mass} / ${mr}</p>`;
+    } else if (currentPhase === 'liquid') {
+      const M = parseFloat(document.getElementById('mol-molarity').value);
+      const V = parseFloat(document.getElementById('mol-vol-liquid').value);
+      if (!M || !V) return;
+      n = M * (V / 1000);
+      detail = `<p><strong>Molaritas:</strong> ${M} M</p><p><strong>Volume:</strong> ${V} mL = ${V/1000} L</p><p><strong>Rumus:</strong> n = M × V = ${M} × ${V/1000}</p>`;
+    } else {
+      const V = parseFloat(document.getElementById('mol-vol-gas').value);
+      if (!V) return;
+      n = V / 22.4;
+      detail = `<p><strong>Volume Gas (STP):</strong> ${V} L</p><p><strong>Rumus:</strong> n = V / 22,4 = ${V} / 22,4</p>`;
+    }
+    const particles = n * AVOGADRO;
+    const resultDiv = document.getElementById('mol-result');
+    resultDiv.innerHTML = `
+      <h3 class="font-bold text-sky-800 text-lg">📊 Hasil Perhitungan</h3>
+      ${detail}
+      <hr class="border-sky-200 my-2">
+      <p class="text-xl font-bold text-sky-900">Jumlah Mol: ${n.toFixed(4)} mol</p>
+      <p class="text-lg font-semibold text-sky-800">Jumlah Partikel: ${formatSci(particles)} partikel</p>
+      <p class="text-sm text-slate-500 mt-1">*Bilangan Avogadro = 6,022 × 10²³ partikel/mol</p>
+    `;
+    resultDiv.classList.remove('hidden');
+  }
+
+  function loadReaction() {
+    const idx = parseInt(document.getElementById('reaction-select').value);
+    const r = reactions[idx];
+    document.getElementById('reaction-display').textContent = r.eq;
+    document.getElementById('reactant-a-label').textContent = `Pereaksi A: ${r.a}`;
+    document.getElementById('reactant-b-label').textContent = `Pereaksi B: ${r.b}`;
+    document.getElementById('limiting-result').classList.add('hidden');
+  }
+
+  function calculateLimiting() {
+    const idx = parseInt(document.getElementById('reaction-select').value);
+    const r = reactions[idx];
+    const molA = parseFloat(document.getElementById('mol-a').value);
+    const molB = parseFloat(document.getElementById('mol-b').value);
+    if (isNaN(molA) || isNaN(molB) || molA <= 0 || molB <= 0) return;
+
+    const ratioA = molA / r.coefA;
+    const ratioB = molB / r.coefB;
+    const limitingIsA = ratioA <= ratioB;
+    const limiting = limitingIsA ? r.a : r.b;
+    const excess = limitingIsA ? r.b : r.a;
+    const limitingMol = limitingIsA ? molA : molB;
+    const limitingCoef = limitingIsA ? r.coefA : r.coefB;
+    const excessMol = limitingIsA ? molB : molA;
+    const excessCoef = limitingIsA ? r.coefB : r.coefA;
+    const usedExcess = (limitingMol / limitingCoef) * excessCoef;
+    const remainExcess = excessMol - usedExcess;
+
+    let productHTML = r.products.map(p => {
+      const molProduct = (limitingMol / limitingCoef) * p.coef;
+      const particles = molProduct * AVOGADRO;
+      return `<div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+        <p class="font-semibold text-emerald-800">${p.name}</p>
+        <p>Mol terbentuk: <strong>${molProduct.toFixed(4)} mol</strong></p>
+        <p>Jumlah partikel: <strong>${formatSci(particles)}</strong></p>
+      </div>`;
+    }).join('');
+
+    document.getElementById('limiting-result').innerHTML = `
+      <div class="result-card rounded-xl p-5">
+        <h3 class="font-bold text-sky-800 text-lg mb-3">📊 Analisis Pereaksi Pembatas</h3>
+        <div class="grid md:grid-cols-2 gap-3 mb-3">
+          <div class="bg-white rounded-lg p-3 border">
+            <p class="text-sm text-slate-500">Perbandingan mol/koefisien</p>
+            <p><strong>${r.a}:</strong> ${molA} / ${r.coefA} = <strong>${ratioA.toFixed(4)}</strong></p>
+            <p><strong>${r.b}:</strong> ${molB} / ${r.coefB} = <strong>${ratioB.toFixed(4)}</strong></p>
+          </div>
+          <div class="bg-white rounded-lg p-3 border">
+            <p class="text-sm text-slate-500">Kesimpulan</p>
+            <p class="text-lg font-bold text-rose-600">⚠️ Pereaksi pembatas: ${limiting}</p>
+            <p class="text-emerald-700">✓ Pereaksi berlebih: ${excess}</p>
+            <p class="text-sm text-slate-600">Sisa ${excess}: ${remainExcess.toFixed(4)} mol</p>
+          </div>
+        </div>
+        <h4 class="font-semibold text-slate-700 mb-2">Produk yang terbentuk:</h4>
+        <div class="grid md:grid-cols-2 gap-3">${productHTML}</div>
+      </div>
+    `;
+    document.getElementById('limiting-result').classList.remove('hidden');
+  }
+
+  lucide.createIcons();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a00193740929fe84',t:'MTc3OTUxMzI1NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
